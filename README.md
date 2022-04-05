@@ -1,70 +1,46 @@
-# Getting Started with Create React App
+# Algorand.dev
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is a complete rewrite of the original Algorand.dev project.
 
-## Available Scripts
+## Lessons Learned
 
-In the project directory, you can run:
+### #1
 
-### `npm start`
+`algosdk` doesn't play nice with `create-react-app` because `react-scripts v5.0.0` uses Webpack 5 which doesn't polyfill `crypto` and other Node packages.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Change your `react-scripts` dependency to `^4.0.0`.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```json
+"dependencies": {
+  "react-scripts": "^4.0.0"
+}
+```
 
-### `npm test`
+[source][1]
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### #2
 
-### `npm run build`
+While in development (localhost) WalletConnect won't work without a **https** connection.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Two step fix, first generate a certificate.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. Install `mkcert` on your operating system – [instructions](https://github.com/FiloSottile/mkcert#installation).
+2. `$ mkcert -install` – generate a local certificate authority.
+3. `$ mkcert localhost` – generate a certificate (if you want local network access, use host IP within local network, I.e. `192.168.X.X`).
+4. `$ mkdir certificates` – create folder to store certificate files (not part of code repository).
+5. `$ mv localhost* certificates/` – move them there.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Then add two environment variables to start using your certificates locally.
 
-### `npm run eject`
+```sh
+HTTPS=true
+SSL_CRT_FILE=certificates/192.168.X.X.pem
+SSL_KEY_FILE=certificates/192.168.X.X-key.pem
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+You can add environment variables to your `package.json` by modifying your `start` script to `"start": "HTTPS=true ...`.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+[source][2]
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+[1]: https://github.com/facebook/create-react-app/issues/11756#issuecomment-1083271257
+[2]: https://create-react-app.dev/docs/using-https-in-development/
