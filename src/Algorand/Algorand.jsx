@@ -105,13 +105,21 @@ function Provider(props) {
     reconnect();
   }, [reconnect]);
 
+  const compile = async (teal) => {
+    const program = await client.compile(teal).do();
+    const bytecode = Uint8Array.from(Buffer.from(program.result, 'base64'));
+
+    return bytecode;
+  };
+
   return (
     <Context.Provider
       value={{
         state,
         connect,
         disconnect,
-        reconnect
+        reconnect,
+        compile
       }}
     >
       {props.children}
