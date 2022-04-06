@@ -8,6 +8,11 @@ import reducer from './reducer.js';
 
 const Context = createContext();
 
+// AlgoExplorer moved their Node and Indexer endpoints, which is why the original algorand.dev isn't working.
+const client = new algosdk.Algodv2('', 'https://node.testnet.algoexplorerapi.io/', '');
+const indexer = new algosdk.Indexer('', 'https://algoindexer.testnet.algoexplorerapi.io/', '');
+const explorer = 'https://testnet.algoexplorer.io';
+
 const constants = {
   walletConnectOptions: {
     bridge: 'https://bridge.walletconnect.org',
