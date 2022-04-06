@@ -1,4 +1,4 @@
-import {createContext, useReducer, useCallback} from 'react';
+import {createContext, useReducer, useCallback, useEffect} from 'react';
 import WalletConnect from '@walletconnect/client';
 import QRCodeModal from 'algorand-walletconnect-qrcode-modal';
 import algosdk from 'algosdk';
@@ -26,6 +26,7 @@ function Provider(props) {
 
   const attachConnectorListeners = useCallback(
     (connector) => {
+
       connector.on('connect', (error, payload) => {
         dispatch({type: 'didConnect', payload: connector});
       });
@@ -41,8 +42,17 @@ function Provider(props) {
         console.log('session_update');
         console.log(error, payload);
       });
-      connector.on('call_request', (error, payload) => {
+      connector.on('call_request', async (error, payload) => {
         // Once a signature request is performed, this is triggered.
+        if (error && error.message === 'Parse error') {
+          // I haven't figured a reason why this error occurs.
+          // It always happens after I reload Chrome while having Pera wallet open.
+          // The error is comes directly from WalletConnect as a WebSocket message.
+          // Reference:
+          // 1. https://github.com/WalletConnect/walletconnect-monorepo/blob/v1.0/packages/clients/core/src/events.ts#L66
+          // 2. https://github.com/WalletConnect/walletconnect-monorepo/blob/54f3ca0b1cd1ac24e8992a5a812fdfad01769abb/packages/helpers/utils/src/validators.ts#L56
+          return;
+        }
         console.log('call_request');
         console.log(error, payload);
       });
@@ -60,7 +70,6 @@ function Provider(props) {
 
   const connect = async () => {
     const connector = new WalletConnect(constants.walletConnectOptions);
-    console.log(connector);
     await connector.createSession();
     attachConnectorListeners(connector);
     if (!connector.connected) {
@@ -86,6 +95,10 @@ function Provider(props) {
       await state.connector.killSession();
     }
   };
+
+  useEffect(() => {
+    reconnect();
+  }, [reconnect]);
 
   return (
     <Context.Provider
