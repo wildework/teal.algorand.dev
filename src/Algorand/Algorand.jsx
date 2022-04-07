@@ -156,7 +156,7 @@ function Provider(props) {
 
     return bytecode;
   };
-  const deploy = async (approvalCode, clearCode) => {
+  const deploy = async (approvalCode, clearCode, stateAllocation) => {
     const approvalProgram = await compile(approvalCode);
     const clearProgram = await compile(clearCode);
 
@@ -167,10 +167,10 @@ function Provider(props) {
       approvalProgram,
       clearProgram,
       from: state.account,
-      numGlobalByteSlices: 0,
-      numGlobalInts: 0,
-      numLocalByteSlices: 0,
-      numLocalInts: 0,
+      numGlobalByteSlices: stateAllocation.global.bytes,
+      numGlobalInts: stateAllocation.global.ints,
+      numLocalByteSlices: stateAllocation.local.bytes,
+      numLocalInts: stateAllocation.local.ints,
       onComplete: algosdk.OnApplicationComplete.NoOpOC,
       suggestedParams: {
         ...suggestedParams,
@@ -204,6 +204,26 @@ function Provider(props) {
     sign(transaction);
   };
 
+  const execute = async (applicationID, method) => {
+    const suggestedParams = await client.getTransactionParams().do();
+
+    // Reference: https://algorand.github.io/js-algorand-sdk/modules.html#makeApplicationNoOpTxnFromObject
+    const transaction = await algosdk.makeApplicationNoOpTxnFromObject({
+      appArgs: [
+        Uint8Array.from(method, (character) => character.charCodeAt(0))
+      ],
+      appIndex: applicationID,
+      from: state.account,
+      suggestedParams: {
+        ...suggestedParams,
+        lastRound: suggestedParams.firstRound + 10
+      }
+    });
+
+    console.log(transaction);
+    sign(transaction);
+  };
+
   return (
     <Context.Provider
       value={{
@@ -213,7 +233,8 @@ function Provider(props) {
         reconnect,
         compile,
         deploy,
-        redeploy
+        redeploy,
+        execute
       }}
     >
       {props.children}
