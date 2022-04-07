@@ -1,9 +1,44 @@
+// import {useEffect} from 'react';
 import {Provider as AlgorandProvider, useAlgorand} from './Algorand';
 
 function App() {
   const algorand = useAlgorand();
 
   console.log(algorand.state);
+
+  const deploy = async () => {
+    const approvalCode = `
+      #pragma version 6
+      int 1
+      return
+    `;
+    const clearCode = `
+      #pragma version 6
+      int 1
+      return
+    `;
+    const result = await algorand.deploy(approvalCode, clearCode);
+    console.log(result);
+  };
+
+  const applicationID = 82707883;
+
+  const redeploy = async () => {
+    const approvalCode = `
+      #pragma version 6
+      int 2
+      // Comment
+      int 1
+      return
+    `;
+    const clearCode = `
+      #pragma version 6
+      int 1
+      return
+    `;
+    const result = await algorand.redeploy(applicationID, approvalCode, clearCode);
+    console.log(result);
+  };
 
   return (
     <div
@@ -67,7 +102,11 @@ function App() {
             <button onClick={algorand.connect}>Connect</button>
             <button onClick={algorand.disconnect}>Disconnect</button>
           </p>
-          {algorand.state.account && <pre>{algorand.state.account}</pre>}
+          {algorand.state.account && <pre className="block">{algorand.state.account}</pre>}
+          <p className="block">
+            <button onClick={deploy}>Deploy</button>
+            <button onClick={redeploy}>Redeploy</button>
+          </p>
         </div>
       </section>
 

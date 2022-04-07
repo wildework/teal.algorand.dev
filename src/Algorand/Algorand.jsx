@@ -10,8 +10,8 @@ const Context = createContext();
 
 // AlgoExplorer moved their Node and Indexer endpoints, which is why the original algorand.dev isn't working.
 const client = new algosdk.Algodv2('', 'https://node.testnet.algoexplorerapi.io/', '');
-const indexer = new algosdk.Indexer('', 'https://algoindexer.testnet.algoexplorerapi.io/', '');
-const explorer = 'https://testnet.algoexplorer.io';
+// const indexer = new algosdk.Indexer('', 'https://algoindexer.testnet.algoexplorerapi.io/', '');
+// const explorer = 'https://testnet.algoexplorer.io';
 
 const constants = {
   walletConnectOptions: {
@@ -105,11 +105,103 @@ function Provider(props) {
     reconnect();
   }, [reconnect]);
 
+  const onSignatureSuccess = async (signedTransaction) => {
+    const decodedTransaction = signedTransaction.map((transaction) => {
+      if (transaction) {
+        return new Uint8Array(Buffer.from(transaction, 'base64'))
+      } else {
+        return null;
+      }
+    });
+
+    try {
+      const response = await client.sendRawTransaction(decodedTransaction).do();
+      console.log(response);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const sign = async (transaction) => {
+    const encodedTransaction = Buffer
+      .from(algosdk.encodeUnsignedTransaction(transaction))
+      .toString('base64');
+    
+    const request = formatJsonRpcRequest(
+      'algo_signTxn',
+      [
+        [
+          {
+            txn: encodedTransaction,
+            message: 'Test #1'
+          }
+        ]
+      ]
+    );
+
+    try {
+      const response = await state.connector.sendCustomRequest(request);
+      console.log('success');
+      console.log(response);
+      onSignatureSuccess(response);
+    } catch (error) {
+      console.log('error');
+      console.log(error);
+    }
+  };
+
   const compile = async (teal) => {
     const program = await client.compile(teal).do();
     const bytecode = Uint8Array.from(Buffer.from(program.result, 'base64'));
 
     return bytecode;
+  };
+  const deploy = async (approvalCode, clearCode) => {
+    const approvalProgram = await compile(approvalCode);
+    const clearProgram = await compile(clearCode);
+
+    const suggestedParams = await client.getTransactionParams().do();
+
+    // Reference: https://algorand.github.io/js-algorand-sdk/modules.html#makeApplicationCreateTxnFromObject
+    const transaction = await algosdk.makeApplicationCreateTxnFromObject({
+      approvalProgram,
+      clearProgram,
+      from: state.account,
+      numGlobalByteSlices: 0,
+      numGlobalInts: 0,
+      numLocalByteSlices: 0,
+      numLocalInts: 0,
+      onComplete: algosdk.OnApplicationComplete.NoOpOC,
+      suggestedParams: {
+        ...suggestedParams,
+        lastRound: suggestedParams.firstRound + 10
+      },
+    });
+
+    console.log(transaction);
+    sign(transaction);
+  };
+
+  const redeploy = async (applicationID, approvalCode, clearCode) => {
+    const approvalProgram = await compile(approvalCode);
+    const clearProgram = await compile(clearCode);
+
+    const suggestedParams = await client.getTransactionParams().do();
+
+    // Reference: https://algorand.github.io/js-algorand-sdk/modules.html#makeApplicationUpdateTxnFromObject
+    const transaction = await algosdk.makeApplicationUpdateTxnFromObject({
+      appIndex: applicationID,
+      approvalProgram,
+      clearProgram,
+      from: state.account,
+      suggestedParams: {
+        ...suggestedParams,
+        lastRound: suggestedParams.firstRound + 10
+      }
+    });
+
+    console.log(transaction);
+    sign(transaction);
   };
 
   return (
@@ -119,7 +211,9 @@ function Provider(props) {
         connect,
         disconnect,
         reconnect,
-        compile
+        compile,
+        deploy,
+        redeploy
       }}
     >
       {props.children}
