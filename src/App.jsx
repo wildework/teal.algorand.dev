@@ -9,6 +9,22 @@ function App() {
   const deploy = async () => {
     const approvalCode = `
       #pragma version 6
+      txn ApplicationID
+      int 0
+      ==
+      bnz initialize
+      //
+      // Do nothing.
+      //
+      int 1
+      return
+      //
+      // Initialize application
+      //
+      initialize:
+      byte "Count"
+      int 0
+      app_global_put
       int 1
       return
     `;
@@ -17,17 +33,69 @@ function App() {
       int 1
       return
     `;
-    const result = await algorand.deploy(approvalCode, clearCode);
+    const result = await algorand.deploy(
+      approvalCode,
+      clearCode,
+      {
+        global: {
+          ints: 1,
+          bytes: 0
+        },
+        local: {
+          ints: 0,
+          bytes: 0
+        }
+      }
+    );
     console.log(result);
   };
 
-  const applicationID = 82707883;
+  const applicationID = 82724157;
 
   const redeploy = async () => {
     const approvalCode = `
       #pragma version 6
-      int 2
-      // Comment
+      // Transaction to create the application.
+      txn ApplicationID
+      int 0
+      ==
+      bnz initialize
+      // Transaction to update the application.
+      txn OnCompletion
+      int UpdateApplication
+      ==
+      bnz initialize
+      // Transaction to increment value.
+      txna ApplicationArgs 0
+      byte "Add"
+      ==
+      bnz increment
+      //
+      // Do nothing.
+      //
+      int 1
+      return
+      //
+      // Initialize application
+      //
+      initialize:
+      byte "Count"
+      int 0
+      app_global_put
+      int 1
+      return
+      //
+      // Increment value
+      //
+      increment:
+      byte "Count"
+      app_global_get
+      store 0
+      byte "Count"
+      load 0
+      int 1
+      +
+      app_global_put
       int 1
       return
     `;
@@ -37,6 +105,11 @@ function App() {
       return
     `;
     const result = await algorand.redeploy(applicationID, approvalCode, clearCode);
+    console.log(result);
+  };
+
+  const add = async () => {
+    const result = await algorand.execute(applicationID, 'Add');
     console.log(result);
   };
 
@@ -106,6 +179,7 @@ function App() {
           <p className="block">
             <button onClick={deploy}>Deploy</button>
             <button onClick={redeploy}>Redeploy</button>
+            <button onClick={add}>Add</button>
           </p>
         </div>
       </section>
