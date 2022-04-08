@@ -70,6 +70,11 @@ function App() {
       byte "Add"
       ==
       bnz increment
+      // Transaction to set value.
+      txna ApplicationArgs 0
+      byte "Update"
+      ==
+      bnz update
       //
       // Do nothing.
       //
@@ -79,25 +84,35 @@ function App() {
       // Initialize application
       //
       initialize:
-      byte "Count"
-      int 0
-      app_global_put
-      int 1
-      return
+        byte "Count"
+        int 0
+        app_global_put
+        int 1
+        return
       //
       // Increment value
       //
       increment:
-      byte "Count"
-      app_global_get
-      store 0
-      byte "Count"
-      load 0
-      int 1
-      +
-      app_global_put
-      int 1
-      return
+        byte "Count"
+        app_global_get
+        store 0
+        byte "Count"
+        load 0
+        int 1
+        +
+        app_global_put
+        int 1
+        return
+      //
+      // Set value
+      //
+      update:
+        byte "Count"
+        txna ApplicationArgs 1
+        btoi
+        app_global_put
+        int 1
+        return
     `;
     const clearCode = `
       #pragma version 6
@@ -109,7 +124,7 @@ function App() {
   };
 
   const add = async () => {
-    const result = await algorand.execute(applicationID, 'Add');
+    const result = await algorand.execute(applicationID, 'Update', [26]);
     console.log(result);
   };
 
