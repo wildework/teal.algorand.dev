@@ -204,14 +204,25 @@ function Provider(props) {
     sign(transaction);
   };
 
-  const execute = async (applicationID, method) => {
+  const execute = async (applicationID, method, parameters = []) => {
     const suggestedParams = await client.getTransactionParams().do();
+
+    const encodedParameters = [
+      method,
+      ...parameters
+    ].map((parameter) => {
+      if (typeof parameter === 'string') {
+        return Uint8Array.from(parameter, (character) => character.charCodeAt(0));
+      } else if (Number.isInteger(parameter)) {
+        return algosdk.encodeUint64(parameter);
+      } else {
+        return null;
+      }
+    }).filter((parameter) => parameter !== null);
 
     // Reference: https://algorand.github.io/js-algorand-sdk/modules.html#makeApplicationNoOpTxnFromObject
     const transaction = await algosdk.makeApplicationNoOpTxnFromObject({
-      appArgs: [
-        Uint8Array.from(method, (character) => character.charCodeAt(0))
-      ],
+      appArgs: encodedParameters,
       appIndex: applicationID,
       from: state.account,
       suggestedParams: {
