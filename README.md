@@ -22,7 +22,9 @@ Change your `react-scripts` dependency to `^4.0.0`.
 
 While in development (localhost) WalletConnect won't work without a **https** connection.
 
-Two step fix, first generate a certificate.
+You can either fix this by using [ngrok](https://ngrok.com/) as a reverse proxy, or...
+
+Generate your own certificate.
 
 1. Install `mkcert` on your operating system – [instructions](https://github.com/FiloSottile/mkcert#installation).
 2. `$ mkcert -install` – generate a local certificate authority.
