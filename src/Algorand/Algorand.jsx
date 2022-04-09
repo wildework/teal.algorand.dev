@@ -235,6 +235,27 @@ function Provider(props) {
     sign(transaction);
   };
 
+  const executeABI = async (application, method, parameters) => {
+    const suggestedParams = await client.getTransactionParams().do();
+    
+    const composer = new algosdk.AtomicTransactionComposer();
+
+    // TODO: This doesn't work because [signer] is not aware of WalletConnect and crashes.
+
+    composer.addMethodCall({
+      method: application.methods.find((candidate) => candidate.name === method),
+      methodArgs: [33],
+      appID: application.networks[suggestedParams.genesisHash].appID,
+      sender: state.account,
+      suggestedParams,
+      signer: algosdk.makeBasicAccountTransactionSigner(state.account)
+    });
+
+    // const group = composer.buildGroup();
+    const result = await composer.execute(client, 10);
+    console.log(result);
+  };
+
   return (
     <Context.Provider
       value={{
@@ -245,7 +266,8 @@ function Provider(props) {
         compile,
         deploy,
         redeploy,
-        execute
+        execute,
+        executeABI
       }}
     >
       {props.children}
