@@ -105,6 +105,33 @@ function Provider(props) {
     reconnect();
   }, [reconnect]);
 
+  const waitForTransaction = async (transactionID) => {
+    const status = await client.status().do();
+    let currentRound = status['last-round'];
+    const timeoutRound = currentRound + constants.transactionTimeout;
+
+    while (currentRound < timeoutRound) {
+      const information = await client.pendingTransactionInformation(transactionID).do();
+      console.log(information);
+      const poolError = information['pool-error'];
+      if (poolError) {
+        // There was an error and this transaction is now dead.
+        throw poolError;
+      }
+      const confirmedRound = information['confirmed-round'];
+      if (confirmedRound) {
+        // This transaction has been included in the blockchain.
+
+        return confirmedRound;
+      }
+
+      const nextRound = currentRound + 1;
+      await client.statusAfterBlock(nextRound).do();
+      currentRound = nextRound;
+    }
+
+  }
+
   const onSignatureSuccess = async (signedTransaction) => {
     const decodedTransaction = signedTransaction.map((transaction) => {
       if (transaction) {
@@ -117,6 +144,10 @@ function Provider(props) {
     try {
       const response = await client.sendRawTransaction(decodedTransaction).do();
       console.log(response);
+      // const pendingTransaction = await client.pendingTransactionInformation(response.txId).do();
+      // console.log(pendingTransaction);
+      waitForTransaction(response.txId);
+      
     } catch (error) {
       console.error(error);
     }
