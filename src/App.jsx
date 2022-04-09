@@ -1,132 +1,12 @@
 // import {useEffect} from 'react';
 import {Provider as AlgorandProvider, useAlgorand} from './Algorand';
+import {Provider as AlgorandCounterProvider, useCounter} from './AlgorandCounter';
 
 function App() {
   const algorand = useAlgorand();
+  const counter = useCounter();
 
   console.log(algorand.state);
-
-  const deploy = async () => {
-    const approvalCode = `
-      #pragma version 6
-      txn ApplicationID
-      int 0
-      ==
-      bnz initialize
-      //
-      // Do nothing.
-      //
-      int 1
-      return
-      //
-      // Initialize application
-      //
-      initialize:
-      byte "Count"
-      int 0
-      app_global_put
-      int 1
-      return
-    `;
-    const clearCode = `
-      #pragma version 6
-      int 1
-      return
-    `;
-    const result = await algorand.deploy(
-      approvalCode,
-      clearCode,
-      {
-        global: {
-          ints: 1,
-          bytes: 0
-        },
-        local: {
-          ints: 0,
-          bytes: 0
-        }
-      }
-    );
-    console.log(result);
-  };
-
-  const applicationID = 82724157;
-
-  const redeploy = async () => {
-    const approvalCode = `
-      #pragma version 6
-      // Transaction to create the application.
-      txn ApplicationID
-      int 0
-      ==
-      bnz initialize
-      // Transaction to update the application.
-      txn OnCompletion
-      int UpdateApplication
-      ==
-      bnz initialize
-      // Transaction to increment value.
-      txna ApplicationArgs 0
-      byte "Add"
-      ==
-      bnz increment
-      // Transaction to set value.
-      txna ApplicationArgs 0
-      byte "Update"
-      ==
-      bnz update
-      //
-      // Do nothing.
-      //
-      int 1
-      return
-      //
-      // Initialize application
-      //
-      initialize:
-        byte "Count"
-        int 0
-        app_global_put
-        int 1
-        return
-      //
-      // Increment value
-      //
-      increment:
-        byte "Count"
-        app_global_get
-        store 0
-        byte "Count"
-        load 0
-        int 1
-        +
-        app_global_put
-        int 1
-        return
-      //
-      // Set value
-      //
-      update:
-        byte "Count"
-        txna ApplicationArgs 1
-        btoi
-        app_global_put
-        int 1
-        return
-    `;
-    const clearCode = `
-      #pragma version 6
-      int 1
-      return
-    `;
-    const result = await algorand.redeploy(applicationID, approvalCode, clearCode);
-    console.log(result);
-  };
-
-  const add = async () => {
-    const result = await algorand.execute(applicationID, 'Update', [26]);
-    console.log(result);
-  };
 
   return (
     <div
@@ -176,14 +56,16 @@ function App() {
       <section className="hero is-medium is-primary is-bold">
         <div className="hero-body">
           <div className="container">
-            <h1 className="title">Developers!</h1>
+            <h1 className="title">Developers!!!</h1>
             <h2 className="subtitle">Algorand is coming</h2>
           </div>
         </div>
       </section>
 
       <section className="section is-flex-grow-1">
+      
         <div className="container">
+        
           <h1 className="title">Sandbox</h1>
           <h2 className="subtitle">Watch out below...</h2>
           <p className="block">
@@ -192,9 +74,10 @@ function App() {
           </p>
           {algorand.state.account && <pre className="block">{algorand.state.account}</pre>}
           <p className="block">
-            <button onClick={deploy}>Deploy</button>
-            <button onClick={redeploy}>Redeploy</button>
-            <button onClick={add}>Add</button>
+            <button onClick={counter.deploy}>Deploy</button>
+            <button onClick={counter.redeploy}>Redeploy</button>
+            <button onClick={counter.add}>Add</button>
+            <button onClick={counter.addABI}>Add ABI</button>
           </p>
         </div>
       </section>
@@ -213,7 +96,9 @@ function App() {
 function WrappedApp(props) {
   return (
     <AlgorandProvider>
-      <App />
+      <AlgorandCounterProvider>
+        <App />
+      </AlgorandCounterProvider>
     </AlgorandProvider>
   );
 }
