@@ -8,15 +8,30 @@ This is a complete rewrite of the original Algorand.dev project.
 
 `algosdk` doesn't play nice with `create-react-app` because `react-scripts v5.0.0` uses Webpack 5 which doesn't polyfill `crypto` and other Node packages.
 
-Change your `react-scripts` dependency to `^4.0.0`.
+Change your `react-scripts` dependency to `4.0.3`.
 
 ```json
 "dependencies": {
-  "react-scripts": "^4.0.0"
+  "react-scripts": "4.0.3"
 }
 ```
 
+This unfortunately breaks your hot-reload and you need to add the following dev dependency to override the broken one.
+
+```json
+"devDependencies": {
+  "react-error-overlay": "6.0.9"
+}
+```
+
+After changing your `package.json` delete `node_modules` and `package-lock.json` and reinstall everything.
+
+```sh
+npm install
+```
+
 [source][1]
+[source][3]
 
 ### #2
 
@@ -46,3 +61,4 @@ You can add environment variables to your `package.json` by modifying your `star
 
 [1]: https://github.com/facebook/create-react-app/issues/11756#issuecomment-1083271257
 [2]: https://create-react-app.dev/docs/using-https-in-development/
+[3]: https://stackoverflow.com/questions/70368760/react-uncaught-referenceerror-process-is-not-defined
