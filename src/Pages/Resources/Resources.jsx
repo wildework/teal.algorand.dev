@@ -1,3 +1,5 @@
+import {Link} from 'react-router-dom';
+
 import links from './links.js'
 
 import Links from './Links.jsx';
@@ -5,6 +7,16 @@ import Links from './Links.jsx';
 function Resources(props) {
   return (
     <>
+      <nav className="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+          <li>
+            <Link to="/">Menu</Link>
+          </li>
+          <li className="is-active">
+            <Link to="/resources" aria-current="page">Developer Resources</Link>
+          </li>
+        </ul>
+      </nav>
       <h1 className="title">Resources</h1>
       <h2 className="subtitle">My favorite places to learn more about Algorand, AVM, TEAL, etc.</h2>
       <div className="content">

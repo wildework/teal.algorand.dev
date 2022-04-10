@@ -1,3 +1,5 @@
+import {Link} from 'react-router-dom';
+
 const source = {
   opSpec: (
 `type OpSpec struct {
@@ -32,6 +34,16 @@ const source = {
 function TEAL(props) {
   return (
     <>
+      <nav className="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+          <li>
+            <Link to="/">Menu</Link>
+          </li>
+          <li className="is-active">
+            <Link to="/teal" aria-current="page">TEAL</Link>
+          </li>
+        </ul>
+      </nav>
       <h1 className="title">TEAL</h1>
       <h2 className="subtitle">A place to learn more about how TEAL works</h2>
       <div className="content">
