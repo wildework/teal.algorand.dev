@@ -175,7 +175,7 @@ function Provider(props) {
     const result = await algorand.executeABI(application, 'Update', [33]);
     console.log(result);
   };
-
+  
   return (
     <Context.Provider
       value={{

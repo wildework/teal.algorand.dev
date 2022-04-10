@@ -1,4 +1,4 @@
-import {createContext, useReducer, useCallback, useEffect} from 'react';
+import React from 'react';
 import WalletConnect from '@walletconnect/client';
 import QRCodeModal from 'algorand-walletconnect-qrcode-modal';
 import algosdk from 'algosdk';
@@ -6,7 +6,7 @@ import {formatJsonRpcRequest} from '@json-rpc-tools/utils';
 
 import reducer from './reducer.js';
 
-const Context = createContext();
+const Context = React.createContext();
 
 // AlgoExplorer moved their Node and Indexer endpoints, which is why the original algorand.dev isn't working.
 const client = new algosdk.Algodv2('', 'https://node.testnet.algoexplorerapi.io/', '');
@@ -22,14 +22,14 @@ const constants = {
 };
 
 function Provider(props) {
-  const [state, dispatch] = useReducer(reducer, {
+  const [state, dispatch] = React.useReducer(reducer, {
     connector: null,
     account: null,
     isInitialized: false,
     isWaiting: false
   });
 
-  const attachConnectorListeners = useCallback(
+  const attachConnectorListeners = React.useCallback(
     (connector) => {
 
       connector.on('connect', (error, payload) => {
@@ -84,7 +84,7 @@ function Provider(props) {
       }
     }
   };
-  const reconnect = useCallback(
+  const reconnect = React.useCallback(
     () => {
       const connector = new WalletConnect(constants.walletConnectOptions);
       attachConnectorListeners(connector);
@@ -101,7 +101,7 @@ function Provider(props) {
     }
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     reconnect();
   }, [reconnect]);
 
@@ -287,6 +287,18 @@ function Provider(props) {
     console.log(result);
   };
 
+  // Assemble Algorand module contexts.
+  let children = props.children;
+  if (state.isInitialized) {
+    for (const module of props.modules) {
+      children = React.createElement(
+        module.package.Provider,
+        null,
+        children
+      );
+    }
+  }
+
   return (
     <Context.Provider
       value={{
@@ -301,7 +313,7 @@ function Provider(props) {
         executeABI
       }}
     >
-      {props.children}
+      {children}
     </Context.Provider>
   );
 }
