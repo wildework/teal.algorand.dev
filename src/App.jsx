@@ -1,12 +1,13 @@
 // import {useEffect} from 'react';
 import {Provider as AlgorandProvider, useAlgorand} from './Algorand';
-import {Provider as AlgorandCounterProvider, useCounter} from './AlgorandCounter';
+import * as Counter from './AlgorandCounter';
 
 function App() {
   const algorand = useAlgorand();
-  const counter = useCounter();
+  const counter = Counter.useCounter();
 
   console.log(algorand.state);
+  console.log(counter);
 
   return (
     <div
@@ -73,12 +74,14 @@ function App() {
             <button onClick={algorand.disconnect}>Disconnect</button>
           </p>
           {algorand.state.account && <pre className="block">{algorand.state.account}</pre>}
-          <p className="block">
-            <button onClick={counter.deploy}>Deploy</button>
-            <button onClick={counter.redeploy}>Redeploy</button>
-            <button onClick={counter.add}>Add</button>
-            <button onClick={counter.addABI}>Add ABI</button>
-          </p>
+          {counter &&
+            <p className="block">
+              <button onClick={counter.deploy}>Deploy</button>
+              <button onClick={counter.redeploy}>Redeploy</button>
+              <button onClick={counter.add}>Add</button>
+              <button onClick={counter.addABI}>Add ABI</button>
+            </p>
+          }
         </div>
       </section>
 
@@ -95,10 +98,14 @@ function App() {
 
 function WrappedApp(props) {
   return (
-    <AlgorandProvider>
-      <AlgorandCounterProvider>
-        <App />
-      </AlgorandCounterProvider>
+    <AlgorandProvider
+      modules={[
+        {
+          package: Counter
+        }
+      ]}
+    >
+      <App />
     </AlgorandProvider>
   );
 }
