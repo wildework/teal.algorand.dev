@@ -11,6 +11,9 @@ function Menu(props) {
           <li>
             <Link to="/teal">TEAL</Link>
           </li>
+          <li>
+            <Link to="/counter">Counter</Link>
+          </li>
         </ul>
       </div>
     </>
