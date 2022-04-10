@@ -292,7 +292,7 @@ function Provider(props) {
   if (state.isInitialized) {
     for (const module of props.modules) {
       children = React.createElement(
-        module.package.Provider,
+        module.bundle.Provider,
         null,
         children
       );

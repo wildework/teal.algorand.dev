@@ -101,7 +101,7 @@ function WrappedApp(props) {
     <AlgorandProvider
       modules={[
         {
-          package: Counter
+          bundle: Counter
         }
       ]}
     >
